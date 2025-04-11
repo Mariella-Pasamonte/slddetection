@@ -3,6 +3,9 @@ import mediapipe as mp
 import numpy as np
 import pickle
 import os
+from starlette.concurrency import run_in_threadpool as RIT
+from PIL import Image
+import io
 
 app = FastAPI()
 
@@ -12,13 +15,20 @@ model_path = os.path.join(os.path.dirname(__file__), "model", "aslModel(a-cAndKi
 with open(model_path, "rb") as f:
     model=pickle.load(f)
 
-print("hello world!")
 
-@app.post("/predict/")
 
-def predict_landmarks(file: UploadFile = File(...)):
+def PredFunc(contents: bytes):
+    image = Image.open(io.BytesIO(bytes))
+    prediction = model.predict()
+    pass
+
+@app.post("/predict")
+async def predict_landmarks(file: UploadFile = File(...)):
     try:
-        prediction = model.predict()
+        contents = await file.read()
+
+        await RIT(PredFunc, contents)
+
         return {"prediction": prediction[0]}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
