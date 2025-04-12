@@ -8,24 +8,31 @@ from PIL import Image
 import io
 import numpy as np
 from preprocess import predictASL, detect_hand_landmarks2D
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 model_path = os.path.join(os.path.dirname(__file__), "model", "aslModel(a-cAndKira)150(80-20-100).pkl")
 
 with open(model_path, "rb") as f:
     model=pickle.load(f)
 
-
-
 def PredFunc(contents: bytes):
-    image = Image.open(io.BytesIO(contents))
+    image = Image.open(io.BytesIO(contents)).convert("RGB")
     image = np.array(image)
     landmarks = detect_hand_landmarks2D(image)
     prediction = predictASL(model, landmarks)
+    print("prediction:",prediction[0])
     if prediction:
-        print(prediction)
+        return(prediction[0])
     else: 
         raise HTTPException(status_code=500, detail="Bad image process.")
 
@@ -34,9 +41,9 @@ async def predict_landmarks(file: UploadFile = File(...)):
     try:
         contents = await file.read()
 
-        await RIT(PredFunc, contents)
+        result = await RIT(PredFunc, contents)
 
-        return {}
+        return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 

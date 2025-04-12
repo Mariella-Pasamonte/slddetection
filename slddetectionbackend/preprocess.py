@@ -7,7 +7,6 @@ hands = mp_hands.Hands(min_detection_confidence=0.1, min_tracking_confidence=0.1
 mp_drawing = mp.solutions.drawing_utils
 
 def detect_hand_landmarks2D(img):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     results = hands.process(img)
     landmarks_list = []
     if results.multi_hand_landmarks:
@@ -15,9 +14,6 @@ def detect_hand_landmarks2D(img):
             for landmark in hand_landmarks.landmark:
                 landmarks_list.append(landmark.x)  # x coordinate
                 landmarks_list.append(landmark.y)  # y coordinate
-
-    print(len(landmarks_list))
-
     return landmarks_list
 
 def pad_to_84(features):
