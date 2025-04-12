@@ -7,6 +7,7 @@ hands = mp_hands.Hands(min_detection_confidence=0.1, min_tracking_confidence=0.1
 mp_drawing = mp.solutions.drawing_utils
 
 def detect_hand_landmarks2D(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     results = hands.process(img)
     landmarks_list = []
     if results.multi_hand_landmarks:
@@ -15,17 +16,19 @@ def detect_hand_landmarks2D(img):
                 landmarks_list.append(landmark.x)  # x coordinate
                 landmarks_list.append(landmark.y)  # y coordinate
 
+    print(len(landmarks_list))
+
     return landmarks_list
 
 def pad_to_84(features):
     return features + [0]*42
 
-def predictASL(features):
+def predictASL(model, landmarks):
     if len(landmarks) == 42:
-        predicted_label = clf.predict([pad_to_84(landmarks)]) #kuwangan if 42 ra, mao use pad_to_84
+        return model.predict([pad_to_84(landmarks)]) #kuwangan if 42 ra, mao use pad_to_84
         
     if len(landmarks) == 84: 
-        predicted_label = clf.predict([landmarks]) #E predict dayon if 84 na daan
-    
-    return predicted_label[0]
+        return model.predict([landmarks]) #E predict dayon if 84 na daan
+    return None
+
                 
