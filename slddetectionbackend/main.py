@@ -6,6 +6,8 @@ import os
 from starlette.concurrency import run_in_threadpool as RIT
 from PIL import Image
 import io
+import numpy as np
+from preprocess import predictASL, detect_hand_landmarks2D
 
 app = FastAPI()
 
@@ -18,9 +20,14 @@ with open(model_path, "rb") as f:
 
 
 def PredFunc(contents: bytes):
-    image = Image.open(io.BytesIO(bytes))
-    prediction = model.predict()
-    pass
+    image = Image.open(io.BytesIO(contents))
+    image = np.array(image)
+    landmarks = detect_hand_landmarks2D(image)
+    prediction = predictASL(model, landmarks)
+    if prediction:
+        print(prediction)
+    else: 
+        raise HTTPException(status_code=500, detail="Bad image process.")
 
 @app.post("/predict")
 async def predict_landmarks(file: UploadFile = File(...)):
@@ -29,7 +36,7 @@ async def predict_landmarks(file: UploadFile = File(...)):
 
         await RIT(PredFunc, contents)
 
-        return {"prediction": prediction[0]}
+        return {}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
